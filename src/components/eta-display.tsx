@@ -76,17 +76,23 @@ const EtaDisplay: React.FC<EtaDisplayProps> = ({
     return arrivals.map((arrival, index) => {
       const countdownText = parseInt(arrival.countdown) <= 1 ? "Arriving" : `${arrival.arrivalTime} [${arrival.countdown} min]`;
       return (
-        <div key={index} className="flex items-baseline justify-between py-4 px-2 border-b border-gray-700/50 last:border-b-0 animate-in fade-in duration-500">
+        <div key={index} className="flex flex-col sm:flex-row items-baseline justify-between py-4 px-2 border-b border-gray-700/50 last:border-b-0 animate-in fade-in duration-500">
           <div className="flex items-center gap-3">
             <Train className="w-6 h-6 text-yellow-300" />
-            <p className="text-xl md:text-2xl font-medium tracking-wide text-white">To {arrival.destination}</p>
+            <div className="flex flex-col">
+                 <p className="text-xl md:text-2xl font-medium tracking-wide text-white">To {arrival.destination}</p>
+                 <p className="text-base font-semibold text-white sm:hidden">
+                    <span className="text-sm text-gray-400 mr-1">Plat.</span>
+                    {arrival.platform}
+                 </p>
+            </div>
           </div>
-          <div className="flex items-baseline gap-6 text-right">
-            <p className="text-xl md:text-2xl font-semibold text-white">
+          <div className="flex items-baseline gap-6 text-right mt-2 sm:mt-0 w-full sm:w-auto justify-end">
+            <p className="text-xl md:text-2xl font-semibold text-white hidden sm:block">
               <span className="text-sm text-gray-400 mr-1">Plat.</span>
               {arrival.platform}
             </p>
-            <p className="text-lg md:text-xl font-bold text-yellow-300 w-48 text-right">{countdownText}</p>
+            <p className="text-lg md:text-xl font-bold text-yellow-300 w-full sm:w-48 text-right">{countdownText}</p>
           </div>
         </div>
       );
@@ -102,9 +108,9 @@ const EtaDisplay: React.FC<EtaDisplayProps> = ({
 
   return (
     <Card className="dark w-full bg-slate-900 border-t-4 shadow-2xl transition-all duration-500" style={{borderColor: lineColor}}>
-      <CardHeader className="flex flex-row items-center justify-between border-b pb-4" style={{borderColor: hexToRgba(lineColor, 0.3)}}>
+      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b pb-4" style={{borderColor: hexToRgba(lineColor, 0.3)}}>
         <CardTitle className="text-3xl md:text-4xl font-extrabold tracking-tighter text-white">{stationName}</CardTitle>
-        <div className="flex items-center gap-2 text-lg font-mono text-gray-300 bg-slate-800 px-3 py-1 rounded-md">
+        <div className="flex items-center gap-2 text-lg font-mono text-gray-300 bg-slate-800 px-3 py-1 rounded-md mt-2 sm:mt-0">
             <Clock className="w-5 h-5"/>
             <span>{displayTime}</span>
         </div>
