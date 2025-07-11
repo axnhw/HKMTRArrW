@@ -32,7 +32,7 @@ const StationSelector: React.FC<StationSelectorProps> = ({
       <CardContent className="space-y-6 pt-4">
         <div className="space-y-3">
           <label className="text-sm font-medium">MTR Line</label>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
             {lines.map((line) => (
               <Button
                 key={line.lineCode}
@@ -44,7 +44,7 @@ const StationSelector: React.FC<StationSelectorProps> = ({
                   className="h-4 w-4 rounded-full inline-block border border-slate-300 mr-2"
                   style={{ backgroundColor: line.color }}
                 />
-                <span className="truncate">{line.lineName}</span>
+                <span className="truncate">{line.lineCode}</span>
               </Button>
             ))}
           </div>
@@ -53,15 +53,14 @@ const StationSelector: React.FC<StationSelectorProps> = ({
         {selectedLine && (
           <div className="space-y-3 animate-in fade-in duration-500">
             <label className="text-sm font-medium">Station</label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
               {stations.map((station) => (
                 <Button
                   key={station.stationCode}
                   variant={selectedStation?.stationCode === station.stationCode ? "default" : "outline"}
                   onClick={() => onStationSelect(station)}
-                  className="justify-start"
                 >
-                   <span className="truncate">{station.stationName}</span>
+                   <span className="truncate">{station.stationCode}</span>
                 </Button>
               ))}
             </div>
