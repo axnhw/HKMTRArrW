@@ -1,36 +1,27 @@
 "use client";
 
-import type { Line } from "@/types/mtr";
+import type { Line, Station } from "@/types/mtr";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button";
 import * as React from "react";
+import { cn } from "@/lib/utils";
 
 interface StationSelectorProps {
   lines: Line[];
-  selectedLineIndex: number | null;
-  onLineChange: (index: number | null) => void;
-  selectedStationIndex: number | null;
-  onStationChange: (index: number | null) => void;
+  selectedLine: Line | null;
+  onLineSelect: (line: Line) => void;
+  selectedStation: Station | null;
+  onStationSelect: (station: Station) => void;
 }
 
 const StationSelector: React.FC<StationSelectorProps> = ({
   lines,
-  selectedLineIndex,
-  onLineChange,
-  selectedStationIndex,
-  onStationChange,
+  selectedLine,
+  onLineSelect,
+  selectedStation,
+  onStationSelect,
 }) => {
-  const selectedLine = selectedLineIndex !== null ? lines[selectedLineIndex] : null;
   const stations = selectedLine ? selectedLine.stations : [];
-
-  const handleLineChange = (value: number[]) => {
-    onLineChange(value[0]);
-    onStationChange(null);
-  };
-  
-  const handleStationChange = (value: number[]) => {
-    onStationChange(value[0]);
-  };
 
   return (
     <Card className="w-full shadow-lg">
@@ -38,53 +29,42 @@ const StationSelector: React.FC<StationSelectorProps> = ({
         <CardTitle className="text-2xl font-bold">MTR Arrival Time</CardTitle>
         <CardDescription>Select a line and station to see live arrival times.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-8 pt-4">
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <label htmlFor="line-slider" className="text-sm font-medium">
-              MTR Line
-            </label>
-            <div className="flex items-center gap-2">
-                {selectedLine && (
-                    <span
-                    className="h-4 w-4 rounded-full inline-block border border-slate-300"
-                    style={{ backgroundColor: selectedLine.color }}
-                    />
-                )}
-                <span className="text-sm font-semibold w-48 text-right truncate">
-                    {selectedLine ? selectedLine.lineName : "Select a line"}
-                </span>
-            </div>
+      <CardContent className="space-y-6 pt-4">
+        <div className="space-y-3">
+          <label className="text-sm font-medium">MTR Line</label>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+            {lines.map((line) => (
+              <Button
+                key={line.lineCode}
+                variant={selectedLine?.lineCode === line.lineCode ? "default" : "outline"}
+                onClick={() => onLineSelect(line)}
+                className="justify-start"
+              >
+                <span
+                  className="h-4 w-4 rounded-full inline-block border border-slate-300 mr-2"
+                  style={{ backgroundColor: line.color }}
+                />
+                <span className="truncate">{line.lineName}</span>
+              </Button>
+            ))}
           </div>
-          <Slider
-            id="line-slider"
-            min={0}
-            max={lines.length - 1}
-            step={1}
-            value={selectedLineIndex !== null ? [selectedLineIndex] : [0]}
-            onValueChange={handleLineChange}
-          />
         </div>
 
         {selectedLine && (
-          <div className="space-y-4 animate-in fade-in duration-500">
-            <div className="flex justify-between items-center">
-              <label htmlFor="station-slider" className="text-sm font-medium">
-                Station
-              </label>
-              <span className="text-sm font-semibold w-48 text-right truncate">
-                {selectedStationIndex !== null ? stations[selectedStationIndex].stationName : "Select a station"}
-              </span>
+          <div className="space-y-3 animate-in fade-in duration-500">
+            <label className="text-sm font-medium">Station</label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+              {stations.map((station) => (
+                <Button
+                  key={station.stationCode}
+                  variant={selectedStation?.stationCode === station.stationCode ? "default" : "outline"}
+                  onClick={() => onStationSelect(station)}
+                  className="justify-start"
+                >
+                   <span className="truncate">{station.stationName}</span>
+                </Button>
+              ))}
             </div>
-            <Slider
-              id="station-slider"
-              min={0}
-              max={stations.length > 1 ? stations.length - 1 : 1}
-              step={1}
-              value={selectedStationIndex !== null ? [selectedStationIndex] : [0]}
-              onValueChange={handleStationChange}
-              disabled={!selectedLine}
-            />
           </div>
         )}
       </CardContent>

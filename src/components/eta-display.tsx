@@ -9,7 +9,7 @@ import { hexToRgba } from "@/lib/utils";
 
 interface EtaDisplayProps {
   stationName: string;
-  currentTime: string;
+  currentTime: string | null;
   arrivals: MergedArrival[];
   isLoading: boolean;
   lineColor: string;
@@ -22,15 +22,33 @@ const EtaDisplay: React.FC<EtaDisplayProps> = ({
   isLoading,
   lineColor,
 }) => {
-    const [displayTime, setDisplayTime] = React.useState(currentTime);
+    const [displayTime, setDisplayTime] = React.useState("--:--:--");
 
     React.useEffect(() => {
-        setDisplayTime(currentTime);
-        const timer = setInterval(() => {
-            setDisplayTime(new Date().toLocaleTimeString('en-GB'));
-        }, 1000);
-
-        return () => clearInterval(timer);
+      let timer: NodeJS.Timeout | null = null;
+  
+      if (currentTime) {
+        let time = new Date(currentTime);
+        
+        const updateClock = () => {
+          time.setSeconds(time.getSeconds() + 1);
+          setDisplayTime(time.toLocaleTimeString('en-GB'));
+        };
+  
+        // Set initial time immediately
+        setDisplayTime(time.toLocaleTimeString('en-GB'));
+        
+        // Then start the interval
+        timer = setInterval(updateClock, 1000);
+      } else {
+        setDisplayTime("--:--:--");
+      }
+  
+      return () => {
+        if (timer) {
+          clearInterval(timer);
+        }
+      };
     }, [currentTime]);
 
   const renderArrivals = () => {
@@ -40,7 +58,7 @@ const EtaDisplay: React.FC<EtaDisplayProps> = ({
           <Skeleton className="h-6 w-2/5 bg-gray-600" />
           <div className="flex items-center gap-4">
             <Skeleton className="h-6 w-12 bg-gray-600" />
-            <Skeleton className="h-6 w-20 bg-gray-600" />
+            <Skeleton className="h-6 w-32 bg-gray-600" />
           </div>
         </div>
       ));
@@ -56,19 +74,19 @@ const EtaDisplay: React.FC<EtaDisplayProps> = ({
     }
 
     return arrivals.map((arrival, index) => {
-      const countdownText = parseInt(arrival.countdown) <= 1 ? "Arriving" : `${arrival.countdown} min`;
+      const countdownText = parseInt(arrival.countdown) <= 1 ? "Arriving" : `${arrival.arrivalTime} [${arrival.countdown} min]`;
       return (
         <div key={index} className="flex items-baseline justify-between py-4 px-2 border-b border-gray-700/50 last:border-b-0 animate-in fade-in duration-500">
           <div className="flex items-center gap-3">
             <Train className="w-6 h-6 text-yellow-300" />
-            <p className="text-2xl md:text-3xl font-medium tracking-wide text-white">To {arrival.destination}</p>
+            <p className="text-xl md:text-2xl font-medium tracking-wide text-white">To {arrival.destination}</p>
           </div>
           <div className="flex items-baseline gap-6 text-right">
-            <p className="text-2xl md:text-3xl font-semibold text-white">
+            <p className="text-xl md:text-2xl font-semibold text-white">
               <span className="text-sm text-gray-400 mr-1">Plat.</span>
               {arrival.platform}
             </p>
-            <p className="text-2xl md:text-3xl font-bold text-yellow-300 w-32 text-right">{countdownText}</p>
+            <p className="text-lg md:text-xl font-bold text-yellow-300 w-48 text-right">{countdownText}</p>
           </div>
         </div>
       );
