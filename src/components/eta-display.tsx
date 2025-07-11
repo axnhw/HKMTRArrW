@@ -3,7 +3,8 @@
 import type { MergedArrival } from "@/types/mtr";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Train, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Train, Clock, RefreshCw } from "lucide-react";
 import * as React from "react";
 import { hexToRgba } from "@/lib/utils";
 
@@ -13,6 +14,7 @@ interface EtaDisplayProps {
   arrivals: MergedArrival[];
   isLoading: boolean;
   lineColor: string;
+  onRefresh: () => void;
 }
 
 const EtaDisplay: React.FC<EtaDisplayProps> = ({
@@ -21,6 +23,7 @@ const EtaDisplay: React.FC<EtaDisplayProps> = ({
   arrivals,
   isLoading,
   lineColor,
+  onRefresh
 }) => {
     const [displayTime, setDisplayTime] = React.useState("--:--:--");
 
@@ -110,9 +113,14 @@ const EtaDisplay: React.FC<EtaDisplayProps> = ({
     <Card className="dark w-full bg-slate-900 border-t-4 shadow-2xl transition-all duration-500" style={{borderColor: lineColor}}>
       <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b pb-4" style={{borderColor: hexToRgba(lineColor, 0.3)}}>
         <CardTitle className="text-3xl md:text-4xl font-extrabold tracking-tighter text-white">{stationName}</CardTitle>
-        <div className="flex items-center gap-2 text-lg font-mono text-gray-300 bg-slate-800 px-3 py-1 rounded-md mt-2 sm:mt-0">
-            <Clock className="w-5 h-5"/>
-            <span>{displayTime}</span>
+        <div className="flex items-center gap-2 bg-slate-800 px-3 py-1 rounded-md mt-2 sm:mt-0">
+            <div className="flex items-center gap-2 text-lg font-mono text-gray-300 ">
+                <Clock className="w-5 h-5"/>
+                <span>{displayTime}</span>
+            </div>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-300 hover:bg-slate-700 hover:text-white" onClick={onRefresh} disabled={isLoading}>
+                <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+            </Button>
         </div>
       </CardHeader>
       <CardContent className="p-2 md:p-4">

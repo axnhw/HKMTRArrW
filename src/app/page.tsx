@@ -10,8 +10,10 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const [selectedLine, setSelectedLine] = React.useState<Line | null>(null);
-  const [selectedStation, setSelectedStation] = React.useState<Station | null>(null);
-  
+  const [selectedStation, setSelectedStation] = React.useState<Station | null>(
+    null
+  );
+
   const [bgColor, setBgColor] = React.useState("var(--background)");
   const [arrivalData, setArrivalData] = React.useState<MergedArrival[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -30,6 +32,68 @@ export default function Home() {
     return map;
   }, []);
 
+  const fetchArrivalData = React.useCallback(async () => {
+    if (!selectedLine || !selectedStation) return;
+
+    setIsLoading(true);
+    setArrivalData([]);
+    try {
+      const response = await fetch(
+        `https://rt.data.gov.hk/v1/transport/mtr/getSchedule.php?line=${selectedLine.lineCode}&sta=${selectedStation.stationCode}`
+      );
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      const data: MtrApiResponse = await response.json();
+
+      if (data.status === 0 || !data.data) {
+        throw new Error(data.message || "No arrival data available.");
+      }
+
+      setCurrentTime(data.curr_time);
+      const schedule = data.data[`${selectedLine.lineCode}-${selectedStation.stationCode}`];
+      if (!schedule) {
+        setArrivalData([]);
+        return;
+      }
+
+      const upArrivals = (schedule.UP || []).map((arr) => ({
+        ...arr,
+        direction: "UP" as const,
+      }));
+      const downArrivals = (schedule.DOWN || []).map((arr) => ({
+        ...arr,
+        direction: "DOWN" as const,
+      }));
+
+      const allArrivals = [...upArrivals, ...downArrivals]
+        .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime())
+        .map((arr) => ({
+          destination: stationCodeToNameMap.get(arr.dest) || arr.dest,
+          platform: arr.plat,
+          arrivalTime: new Date(arr.time).toLocaleTimeString("en-GB", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          }),
+          countdown: arr.ttnt,
+          direction: arr.direction,
+        }));
+
+      setArrivalData(allArrivals);
+    } catch (error) {
+      console.error("Failed to fetch MTR data:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Could not fetch arrival times. Please try again later.",
+      });
+      setArrivalData([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedLine, selectedStation, stationCodeToNameMap, toast]);
+
   React.useEffect(() => {
     if (selectedLine) {
       const color = selectedLine.color;
@@ -40,66 +104,15 @@ export default function Home() {
   }, [selectedLine]);
 
   React.useEffect(() => {
-    const fetchArrivalData = async (lineCode: string, stationCode: string) => {
-      setIsLoading(true);
-      setArrivalData([]);
-      try {
-        const response = await fetch(
-          `https://rt.data.gov.hk/v1/transport/mtr/getSchedule.php?line=${lineCode}&sta=${stationCode}`
-        );
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        const data: MtrApiResponse = await response.json();
-
-        if (data.status === 0 || !data.data) {
-          throw new Error(data.message || "No arrival data available.");
-        }
-        
-        setCurrentTime(data.curr_time);
-        const schedule = data.data[`${lineCode}-${stationCode}`];
-        if (!schedule) {
-          setArrivalData([]);
-          return;
-        }
-
-        const upArrivals = (schedule.UP || []).map(arr => ({...arr, direction: 'UP' as const}));
-        const downArrivals = (schedule.DOWN || []).map(arr => ({...arr, direction: 'DOWN' as const}));
-
-        const allArrivals = [...upArrivals, ...downArrivals]
-            .sort((a,b) => new Date(a.time).getTime() - new Date(b.time).getTime())
-            .map(arr => ({
-                destination: stationCodeToNameMap.get(arr.dest) || arr.dest,
-                platform: arr.plat,
-                arrivalTime: new Date(arr.time).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-                countdown: arr.ttnt,
-                direction: arr.direction,
-            }));
-        
-        setArrivalData(allArrivals);
-
-      } catch (error) {
-        console.error("Failed to fetch MTR data:", error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Could not fetch arrival times. Please try again later.",
-        });
-        setArrivalData([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     if (selectedLine && selectedStation) {
       setStationName(selectedStation.stationName);
-      fetchArrivalData(selectedLine.lineCode, selectedStation.stationCode);
+      fetchArrivalData();
     } else {
       setArrivalData([]);
       setStationName("");
       setCurrentTime(null);
     }
-  }, [selectedLine, selectedStation, stationCodeToNameMap, toast]);
+  }, [selectedLine, selectedStation, fetchArrivalData]);
 
   const handleLineSelect = (line: Line) => {
     setSelectedLine(line);
@@ -131,6 +144,7 @@ export default function Home() {
             arrivals={arrivalData}
             isLoading={isLoading}
             lineColor={selectedLine.color}
+            onRefresh={fetchArrivalData}
           />
         )}
       </div>
