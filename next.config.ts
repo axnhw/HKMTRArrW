@@ -1,7 +1,11 @@
 import type {NextConfig} from 'next';
 
+const isGithubActions = process.env.GITHUB_ACTIONS === 'true';
+
 const nextConfig: NextConfig = {
-  /* config options here */
+  output: 'export',
+  basePath: isGithubActions ? '/HKMTRArr' : '',
+  assetPrefix: isGithubActions ? '/HKMTRArr/' : '',
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -9,6 +13,7 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
