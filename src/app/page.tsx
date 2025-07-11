@@ -19,6 +19,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [currentTime, setCurrentTime] = React.useState<string | null>(null);
   const [stationName, setStationName] = React.useState("");
+  const etaDisplayRef = React.useRef<HTMLDivElement>(null);
 
   const { toast } = useToast();
 
@@ -113,6 +114,14 @@ export default function Home() {
       setCurrentTime(null);
     }
   }, [selectedLine, selectedStation, fetchArrivalData]);
+  
+  React.useEffect(() => {
+    if (selectedStation && etaDisplayRef.current) {
+        setTimeout(() => {
+            etaDisplayRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+    }
+  }, [selectedStation]);
 
   const handleLineSelect = (line: Line) => {
     setSelectedLine(line);
@@ -138,14 +147,16 @@ export default function Home() {
         />
 
         {selectedLine && selectedStation && (
-          <EtaDisplay
-            stationName={stationName}
-            currentTime={currentTime}
-            arrivals={arrivalData}
-            isLoading={isLoading}
-            lineColor={selectedLine.color}
-            onRefresh={fetchArrivalData}
-          />
+          <div ref={etaDisplayRef}>
+            <EtaDisplay
+              stationName={stationName}
+              currentTime={currentTime}
+              arrivals={arrivalData}
+              isLoading={isLoading}
+              lineColor={selectedLine.color}
+              onRefresh={fetchArrivalData}
+            />
+          </div>
         )}
       </div>
     </main>

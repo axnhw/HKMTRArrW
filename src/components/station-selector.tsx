@@ -27,7 +27,6 @@ const StationSelector: React.FC<StationSelectorProps> = ({
     <Card className="w-full shadow-lg">
       <CardHeader>
         <CardTitle className="text-2xl font-bold">MTR Arrival Time</CardTitle>
-        <CardDescription>Select a line and station to see live arrival times.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6 pt-4">
         <div className="space-y-3">
@@ -38,10 +37,10 @@ const StationSelector: React.FC<StationSelectorProps> = ({
                 key={line.lineCode}
                 variant={selectedLine?.lineCode === line.lineCode ? "default" : "outline"}
                 onClick={() => onLineSelect(line)}
-                className="justify-start"
+                className="justify-start px-2"
               >
                 <span
-                  className="h-4 w-4 rounded-full inline-block border border-slate-300 mr-2"
+                  className="h-4 w-4 rounded-full inline-block border border-slate-300 mr-2 flex-shrink-0"
                   style={{ backgroundColor: line.color }}
                 />
                 <span className="truncate">{line.lineCode}</span>
