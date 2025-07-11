@@ -32,7 +32,7 @@ const StationSelector: React.FC<StationSelectorProps> = ({
       <CardContent className="space-y-6 pt-4">
         <div className="space-y-3">
           <label className="text-sm font-medium">MTR Line</label>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2">
             {lines.map((line) => (
               <Button
                 key={line.lineCode}
@@ -53,7 +53,7 @@ const StationSelector: React.FC<StationSelectorProps> = ({
         {selectedLine && (
           <div className="space-y-3 animate-in fade-in duration-500">
             <label className="text-sm font-medium">Station</label>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
+            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2">
               {stations.map((station) => (
                 <Button
                   key={station.stationCode}
