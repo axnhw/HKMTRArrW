@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 export const metadata: Metadata = {
   title: "MTR Arrival Time",
   description: "Live MTR train arrival times.",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no",
 };
 
 export default function RootLayout({

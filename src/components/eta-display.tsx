@@ -4,7 +4,7 @@ import type { MergedArrival } from "@/types/mtr";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Train, Clock, RefreshCw } from "lucide-react";
+import { Train, Clock, RefreshCw, ArrowLeft } from "lucide-react";
 import * as React from "react";
 import { hexToRgba } from "@/lib/utils";
 
@@ -15,6 +15,7 @@ interface EtaDisplayProps {
   isLoading: boolean;
   lineColor: string;
   onRefresh: () => void;
+  onBack: () => void;
 }
 
 const EtaDisplay: React.FC<EtaDisplayProps> = ({
@@ -23,7 +24,8 @@ const EtaDisplay: React.FC<EtaDisplayProps> = ({
   arrivals,
   isLoading,
   lineColor,
-  onRefresh
+  onRefresh,
+  onBack
 }) => {
     const [displayTime, setDisplayTime] = React.useState("--:--:--");
 
@@ -55,7 +57,7 @@ const EtaDisplay: React.FC<EtaDisplayProps> = ({
     }, [currentTime]);
 
   const renderArrivals = () => {
-    if (isLoading) {
+    if (isLoading && arrivals.length === 0) {
       return Array.from({ length: 4 }).map((_, i) => (
         <div key={i} className="flex items-center justify-between py-4 px-2 border-b border-gray-700">
           <Skeleton className="h-6 w-2/5 bg-gray-600" />
@@ -77,58 +79,45 @@ const EtaDisplay: React.FC<EtaDisplayProps> = ({
     }
 
     return arrivals.map((arrival, index) => {
-      const countdownText = parseInt(arrival.countdown) <= 1 ? "Arriving" : `${arrival.arrivalTime} [${arrival.countdown} min]`;
+      const countdownText = parseInt(arrival.countdown) <= 1 ? "Arriving" : `${arrival.arrivalTime} (${arrival.countdown} min)`;
       return (
-        <div key={index} className="flex flex-col sm:flex-row items-baseline justify-between py-4 px-2 border-b border-gray-700/50 last:border-b-0 animate-in fade-in duration-500">
-          <div className="flex items-center gap-3">
-            <Train className="w-6 h-6 text-yellow-300" />
-            <div className="flex flex-col">
-                 <p className="text-xl md:text-2xl font-medium tracking-wide text-white">To {arrival.destination}</p>
-                 <p className="text-base font-semibold text-white sm:hidden">
-                    <span className="text-sm text-gray-400 mr-1">Plat.</span>
-                    {arrival.platform}
-                 </p>
-            </div>
+        <div key={index} className="flex flex-col items-baseline justify-between py-3 px-1 border-b border-gray-700/50 last:border-b-0">
+          <div className="flex items-center gap-3 w-full">
+            <Train className="w-5 h-5 text-yellow-300" />
+            <p className="text-lg font-medium tracking-wide text-white truncate">To {arrival.destination}</p>
           </div>
-          <div className="flex items-baseline gap-6 text-right mt-2 sm:mt-0 w-full sm:w-auto justify-end">
-            <p className="text-xl md:text-2xl font-semibold text-white hidden sm:block">
-              <span className="text-sm text-gray-400 mr-1">Plat.</span>
-              {arrival.platform}
-            </p>
-            <p className="text-lg md:text-xl font-bold text-yellow-300 w-full sm:w-48 text-right">{countdownText}</p>
+          <div className="flex items-baseline justify-between w-full mt-1">
+             <p className="text-lg font-semibold text-white">
+                <span className="text-sm text-gray-400 mr-1">Plat.</span>
+                {arrival.platform}
+             </p>
+            <p className="text-base font-bold text-yellow-300 text-right">{countdownText}</p>
           </div>
         </div>
       );
     });
   };
 
-  const dynamicCardStyle = {
-    backgroundColor: hexToRgba(lineColor, 0.1),
-    borderTop: `4px solid ${lineColor}`,
-    boxShadow: `0 10px 15px -3px ${hexToRgba(lineColor, 0.2)}, 0 4px 6px -2px ${hexToRgba(lineColor, 0.1)}`
-  };
-
-
   return (
-    <Card className="dark w-full bg-slate-900 border-t-4 shadow-2xl transition-all duration-500" style={{borderColor: lineColor}}>
-      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b pb-4" style={{borderColor: hexToRgba(lineColor, 0.3)}}>
-        <CardTitle className="text-3xl md:text-4xl font-extrabold tracking-tighter text-white">{stationName}</CardTitle>
-        <div className="flex items-center gap-2 bg-slate-800 px-3 py-1 rounded-md mt-2 sm:mt-0">
-            <div className="flex items-center gap-2 text-lg font-mono text-gray-300 ">
-                <Clock className="w-5 h-5"/>
-                <span>{displayTime}</span>
-            </div>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-300 hover:bg-slate-700 hover:text-white" onClick={onRefresh} disabled={isLoading}>
-                <RefreshCw className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
+    <div className="dark w-full h-screen bg-slate-900 flex flex-col p-2">
+      <CardHeader className="flex flex-row items-center justify-between border-b pb-2 px-1" style={{borderColor: hexToRgba(lineColor, 0.3)}}>
+        <div className="flex items-center">
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-300 hover:bg-slate-700 hover:text-white mr-1" onClick={onBack}>
+                <ArrowLeft className="w-5 h-5" />
             </Button>
+            <CardTitle className="text-2xl font-bold tracking-tighter text-white truncate">{stationName}</CardTitle>
+        </div>
+        <div className="flex items-center gap-2 text-lg font-mono text-gray-300 ">
+            <Clock className="w-4 h-4"/>
+            <span className="text-base">{displayTime}</span>
         </div>
       </CardHeader>
-      <CardContent className="p-2 md:p-4">
+      <CardContent className="flex-grow p-1 overflow-y-auto">
         <div className="flow-root">
             {renderArrivals()}
         </div>
       </CardContent>
-    </Card>
+    </div>
   );
 };
 

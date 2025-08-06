@@ -1,83 +1,48 @@
 "use client";
 
 import type { Line, Station } from "@/types/mtr";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import * as React from "react";
+import { ArrowLeft } from "lucide-react";
 
 interface StationSelectorProps {
-  lines: Line[];
-  selectedLine: Line | null;
-  onLineSelect: (line: Line) => void;
-  selectedStation: Station | null;
+  line: Line;
   onStationSelect: (station: Station) => void;
+  onBack: () => void;
 }
 
 const StationSelector: React.FC<StationSelectorProps> = ({
-  lines,
-  selectedLine,
-  onLineSelect,
-  selectedStation,
+  line,
   onStationSelect,
+  onBack,
 }) => {
-  const stations = selectedLine ? selectedLine.stations : [];
-
-  const getContrastColor = (hexcolor: string) => {
-    if (hexcolor.startsWith('#')) {
-      hexcolor = hexcolor.slice(1);
-    }
-    const r = parseInt(hexcolor.substring(0, 2), 16);
-    const g = parseInt(hexcolor.substring(2, 4), 16);
-    const b = parseInt(hexcolor.substring(4, 6), 16);
-    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
-    return (yiq >= 128) ? 'black' : 'white';
-  };
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+  const stations = line.stations;
 
   return (
-    <Card className="w-full shadow-lg">
-      <CardHeader>
-        <CardTitle className="text-2xl font-bold">MTR Arrival Time</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4 pt-2">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">MTR Line</label>
-          <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2">
-            {lines.map((line) => (
-              <Button
-                key={line.lineCode}
-                onClick={() => onLineSelect(line)}
-                className={`h-10 text-sm font-bold transition-transform duration-200 ease-in-out hover:scale-110 focus:ring-2 focus:ring-offset-2 ${
-                  selectedLine?.lineCode === line.lineCode ? 'ring-2 ring-primary ring-offset-2' : 'ring-1 ring-inset ring-black/10'
-                }`}
-                style={{ 
-                    backgroundColor: line.color,
-                    color: getContrastColor(line.color)
-                }}
-              >
-                {line.lineCode}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        {selectedLine && (
-          <div className="space-y-3 animate-in fade-in duration-500">
-            <label className="text-sm font-medium">Station</label>
-            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2">
-              {stations.map((station) => (
-                <Button
-                  key={station.stationCode}
-                  variant={selectedStation?.stationCode === station.stationCode ? "default" : "outline"}
-                  onClick={() => onStationSelect(station)}
-                >
-                   <span className="truncate">{station.stationCode}</span>
-                </Button>
-              ))}
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    <div className="flex flex-col h-screen bg-black/50 p-2">
+      <div className="flex items-center mb-2">
+         <Button variant="ghost" size="icon" onClick={onBack} className="mr-2 text-white">
+            <ArrowLeft />
+         </Button>
+         <h2 className="text-2xl font-bold text-white" style={{color: line.color}}>{line.lineName}</h2>
+      </div>
+      <div
+        ref={scrollContainerRef}
+        className="flex-grow overflow-y-auto space-y-2"
+      >
+        {stations.map((station) => (
+          <Button
+            key={station.stationCode}
+            variant="secondary"
+            className="w-full h-14 text-xl justify-start p-4"
+            onClick={() => onStationSelect(station)}
+          >
+            {station.stationName}
+          </Button>
+        ))}
+      </div>
+    </div>
   );
 };
 

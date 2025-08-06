@@ -37,7 +37,8 @@ export default function Home() {
     if (!selectedLine || !selectedStation) return;
 
     setIsLoading(true);
-    setArrivalData([]);
+    // Don't clear arrival data on auto-refresh to avoid flicker
+    // setArrivalData([]); 
     try {
       const response = await fetch(
         `https://rt.data.gov.hk/v1/transport/mtr/getSchedule.php?line=${selectedLine.lineCode}&sta=${selectedStation.stationCode}`
@@ -48,7 +49,12 @@ export default function Home() {
       const data: MtrApiResponse = await response.json();
 
       if (data.status === 0 || !data.data) {
-        throw new Error(data.message || "No arrival data available.");
+        // Don't throw error on auto-refresh, just keep stale data
+        console.warn(data.message || "No arrival data available.");
+        if (arrivalData.length === 0) {
+             setArrivalData([]);
+        }
+        return;
       }
 
       setCurrentTime(data.curr_time);
@@ -84,16 +90,29 @@ export default function Home() {
       setArrivalData(allArrivals);
     } catch (error) {
       console.error("Failed to fetch MTR data:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Could not fetch arrival times. Please try again later.",
-      });
-      setArrivalData([]);
+       if (arrivalData.length === 0) { // Only toast if there's no data at all
+         toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not fetch arrival times.",
+          });
+          setArrivalData([]);
+       }
     } finally {
       setIsLoading(false);
     }
-  }, [selectedLine, selectedStation, stationCodeToNameMap, toast]);
+  }, [selectedLine, selectedStation, stationCodeToNameMap, toast, arrivalData.length]);
+  
+  React.useEffect(() => {
+    const intervalId = setInterval(() => {
+        if (selectedLine && selectedStation) {
+            fetchArrivalData();
+        }
+    }, 10000); // 10 seconds
+
+    return () => clearInterval(intervalId);
+  }, [selectedLine, selectedStation, fetchArrivalData]);
+
 
   React.useEffect(() => {
     if (selectedLine) {
@@ -132,22 +151,41 @@ export default function Home() {
     setSelectedStation(station);
   };
 
-  return (
-    <main
-      className="flex min-h-screen flex-col items-center p-4 sm:p-8 md:p-12 transition-colors duration-500"
-      style={{ backgroundColor: bgColor }}
-    >
-      <div className="w-full max-w-4xl space-y-8">
-        <StationSelector
-          lines={mtrData}
-          selectedLine={selectedLine}
-          onLineSelect={handleLineSelect}
-          selectedStation={selectedStation}
-          onStationSelect={handleStationSelect}
-        />
+  const resetSelection = () => {
+    setSelectedLine(null);
+    setSelectedStation(null);
+  }
 
-        {selectedLine && selectedStation && (
-          <div ref={etaDisplayRef}>
+  const renderContent = () => {
+    if (!selectedLine) {
+      return (
+          <div className="grid grid-cols-3 gap-1 p-1">
+             {mtrData.map((line) => (
+                <button
+                    key={line.lineCode}
+                    onClick={() => handleLineSelect(line)}
+                    className="flex items-center justify-center aspect-square rounded-lg transition-transform duration-200 ease-in-out hover:scale-105 focus:ring-2 focus:ring-offset-2"
+                    style={{ backgroundColor: line.color, color: getContrastColor(line.color) }}
+                >
+                    <span className="text-xl font-bold">{line.lineCode}</span>
+                </button>
+             ))}
+          </div>
+      );
+    }
+
+    if (!selectedStation) {
+      return (
+        <StationSelector
+          line={selectedLine}
+          onStationSelect={handleStationSelect}
+          onBack={resetSelection}
+        />
+      );
+    }
+    
+    return (
+        <div ref={etaDisplayRef}>
             <EtaDisplay
               stationName={stationName}
               currentTime={currentTime}
@@ -155,9 +193,31 @@ export default function Home() {
               isLoading={isLoading}
               lineColor={selectedLine.color}
               onRefresh={fetchArrivalData}
+              onBack={() => setSelectedStation(null)}
             />
           </div>
-        )}
+    )
+  }
+
+  const getContrastColor = (hexcolor: string) => {
+    if (hexcolor.startsWith('#')) {
+      hexcolor = hexcolor.slice(1);
+    }
+    const r = parseInt(hexcolor.substring(0, 2), 16);
+    const g = parseInt(hexcolor.substring(2, 4), 16);
+    const b = parseInt(hexcolor.substring(4, 6), 16);
+    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+    return (yiq >= 128) ? 'black' : 'white';
+  };
+
+
+  return (
+    <main
+      className="flex min-h-screen flex-col items-center justify-center transition-colors duration-500"
+      style={{ backgroundColor: bgColor }}
+    >
+      <div className="w-full max-w-sm h-screen">
+          {renderContent()}
       </div>
     </main>
   );
